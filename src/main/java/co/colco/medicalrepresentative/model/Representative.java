@@ -19,7 +19,5 @@ public class Representative {
         this.drugs = drugs;
     }
 
-    public Representative() {
-
-    }
+    public Representative() { }
 }

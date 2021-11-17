@@ -28,24 +28,25 @@ public class RepresentativeService {
     public Representative updateRepresentative(String representativeId, Representative representative) {
         Representative dbFetchedRepresentative = getRepresentative(representativeId);
         Representative updatedRepresentative = new Representative();
-        List<DrugDetail> updatedDrugDetail = new ArrayList<>();
-        if(!(Objects.equals(representative.getRepresentativeName(), "") || representative.getRepresentativeName().equals(null))) {
+        if(!(Objects.equals(representative.getRepresentativeName(), "") || representative.getRepresentativeName() == null)) {
             updatedRepresentative.setRepresentativeName(representative.getRepresentativeName());
         }
         List<DrugDetail> dbDrugDetail = dbFetchedRepresentative.getDrugs();
         List<DrugDetail> bodyDrugDetail = representative.getDrugs();
-        for(DrugDetail bodyDrug : bodyDrugDetail)  {
-            for(DrugDetail dbDrug : dbDrugDetail) {
+        for(DrugDetail dbDrug : dbDrugDetail)  {
+            for(DrugDetail bodyDrug : bodyDrugDetail) {
                 if(dbDrug.getDrugName().equals(bodyDrug.getDrugName())) {
-                    updatedDrugDetail.add(new DrugDetail(dbDrug.getDrugName(),
-                            bodyDrug.getPrice(), dbDrug.getAmount() + bodyDrug.getAmount()));
-                } else {
-                    updatedDrugDetail.add(new DrugDetail(bodyDrug.getDrugName(), bodyDrug.getPrice(),
-                            bodyDrug.getAmount()));
+                    dbDrug.setAmount(dbDrug.getAmount() + bodyDrug.getAmount());
                 }
             }
         }
-        updatedRepresentative.setDrugs(updatedDrugDetail);
+        for(DrugDetail bodyDrug : bodyDrugDetail) {
+            if(dbDrugDetail.stream()
+                    .noneMatch(element  -> element.getDrugName().equals(bodyDrug.getDrugName()))) {
+                dbDrugDetail.add(bodyDrug);
+            }
+        }
+        updatedRepresentative.setDrugs(dbDrugDetail);
         return representativeDao.updateRepresentative(representativeId, updatedRepresentative);
     }
 
