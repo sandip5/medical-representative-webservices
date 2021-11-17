@@ -1,19 +1,17 @@
 package co.colco.medicalrepresentative.service;
 
 import co.colco.medicalrepresentative.dao.RepresentativeDao;
+import co.colco.medicalrepresentative.model.DrugDetail;
 import co.colco.medicalrepresentative.model.Representative;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
+@AllArgsConstructor
 public class RepresentativeService {
     private final RepresentativeDao representativeDao;
-
-
-    public RepresentativeService(RepresentativeDao representativeDao) {
-        this.representativeDao = representativeDao;
-    }
 
     public List<Representative> getRepresentatives() {
         return representativeDao.getRepresentatives();
@@ -29,23 +27,26 @@ public class RepresentativeService {
 
     public Representative updateRepresentative(String representativeId, Representative representative) {
         Representative dbFetchedRepresentative = getRepresentative(representativeId);
+        Representative updatedRepresentative = new Representative();
+        List<DrugDetail> updatedDrugDetail = new ArrayList<>();
         if(!(Objects.equals(representative.getRepresentativeName(), "") || representative.getRepresentativeName().equals(null))) {
-            dbFetchedRepresentative.setRepresentativeName(representative.getRepresentativeName());
+            updatedRepresentative.setRepresentativeName(representative.getRepresentativeName());
         }
-        Map<String, Integer> updatedRepresentativeDrugDetail = new HashMap<>();
-        Map<String, Integer> dbRepresentativeDrugDetail = dbFetchedRepresentative.getDrugDetails();
-        Map<String, Integer> bodyRepresentativeDrugDetail = representative.getDrugDetails();
-        for(Map.Entry<String, Integer> bodyDrugDetail : bodyRepresentativeDrugDetail.entrySet()) {
-            for (Map.Entry<String, Integer> dbDrugDetail : dbRepresentativeDrugDetail.entrySet()) {
-                if (Objects.equals(dbDrugDetail.getKey(), bodyDrugDetail.getKey())) {
-                    updatedRepresentativeDrugDetail.put(dbDrugDetail.getKey(), dbDrugDetail.getValue() + bodyDrugDetail.getValue());
+        List<DrugDetail> dbDrugDetail = dbFetchedRepresentative.getDrugs();
+        List<DrugDetail> bodyDrugDetail = representative.getDrugs();
+        for(DrugDetail bodyDrug : bodyDrugDetail)  {
+            for(DrugDetail dbDrug : dbDrugDetail) {
+                if(dbDrug.getDrugName().equals(bodyDrug.getDrugName())) {
+                    updatedDrugDetail.add(new DrugDetail(dbDrug.getDrugName(),
+                            bodyDrug.getPrice(), dbDrug.getAmount() + bodyDrug.getAmount()));
                 } else {
-                    updatedRepresentativeDrugDetail.put(bodyDrugDetail.getKey(), bodyDrugDetail.getValue());
+                    updatedDrugDetail.add(new DrugDetail(bodyDrug.getDrugName(), bodyDrug.getPrice(),
+                            bodyDrug.getAmount()));
                 }
             }
         }
-        dbFetchedRepresentative.setDrugDetails(updatedRepresentativeDrugDetail);
-        return representativeDao.updateRepresentative(representativeId, dbFetchedRepresentative);
+        updatedRepresentative.setDrugs(updatedDrugDetail);
+        return representativeDao.updateRepresentative(representativeId, updatedRepresentative);
     }
 
     public void deleteRepresentative(String representativeId) {

@@ -2,19 +2,16 @@ package co.colco.medicalrepresentative.dao;
 
 import co.colco.medicalrepresentative.model.Representative;
 import co.colco.medicalrepresentative.repository.RepresentativeRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Component
+@AllArgsConstructor
 public class RepresentativeDao {
     private final RepresentativeRepository representativeRepository;
-
-    public RepresentativeDao(RepresentativeRepository representativeRepository) {
-        this.representativeRepository = representativeRepository;
-    }
 
     public List<Representative> getRepresentatives() {
         return representativeRepository.findAll();
@@ -25,11 +22,14 @@ public class RepresentativeDao {
     }
 
     public Representative createRepresentative(Representative representative) {
-        return representativeRepository.save(representative);
+        return representativeRepository.insert(representative);
     }
 
     public Representative updateRepresentative(String representativeId, Representative representative) {
-        return representativeRepository.save(representative);
+        Representative updatedRepresentative = getRepresentative(representativeId);
+        updatedRepresentative.setRepresentativeName(representative.getRepresentativeName());
+        updatedRepresentative.setDrugs(representative.getDrugs());
+        return representativeRepository.save(updatedRepresentative);
     }
 
     public void deleteRepresentativeUsingId(String representativeId) {
